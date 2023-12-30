@@ -39,7 +39,7 @@ def add_book():
         if not book_name or not isbn or not author_name:
             abort(400, description="Missing required book information")
         book_data_base.add_book_in(book_name=book_name, isbn=isbn, author_name=author_name)
-        return jsonify(code=200, message="Book has been successfully added to database")
+        return jsonify(code=200, message="Book has been successfully added to database"), 200
 
     except ValueError as e:
         message = str(e)
