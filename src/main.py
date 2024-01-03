@@ -1,3 +1,4 @@
+import bcrypt
 from flask import Flask, jsonify, request, abort
 from book_database import DatabaseConnection
 import json
@@ -17,16 +18,20 @@ def index():
 def get_book():
     try:
         id = request.args.get("id")
-        data = book_data_base.select_single_row(id)[0]
-        json_data = {
-            "id": data[0],
-            "author_name": data[1],
-            "ISBN": data[2],
-            "BookName": data[3]
-        }
-        return jsonify(book_data=json_data, response=200), 200
-    except:
-        return jsonify(code=400, message="error getting book"), 400
+        data = book_data_base.select_single_row_table(id=id, table='books_data')
+        if data:
+            json_data = {
+                "id": data[0],
+                "author_name": data[1],
+                "ISBN": data[2],
+                "BookName": data[3],
+                "imageLink":data[4]
+            }
+            return jsonify(book_data=json_data, response=200), 200
+        raise ValueError ("book not found")
+    except ValueError as e:
+        message = str(e)
+        return jsonify(message = message, response = 400), 400
 
 
 @app.route("/add_book", methods=["POST"])
@@ -52,6 +57,33 @@ def delete():
         id = request.args.get("id")
         book_data_base.delete_book(id)
         return jsonify(code=200, message="book successfully deleted from database")
+    except ValueError as e:
+        message = str(e)
+        return json.dumps({"error": message}), 400
+
+
+@app.route("/user-management", methods=["GET", "POST"])
+def user_management():
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            id = data.get("id")
+            email = data.get("email")
+            password = data.get("password")
+            book_data_base.add_users(id, email, password)
+            return jsonify(code=200, message="user was successfully added to database"), 200
+        except ValueError as e:
+            message = str(e)
+            return json.dumps({"error": message}), 400
+    try:
+        email = request.args.get("email")
+        password = request.args.get("password")
+        user_id = book_data_base.authenticate(email, password)
+        if user_id:
+            user_id = user_id[0]
+            return jsonify(code=200, id=user_id, message=f"user with id {user_id} authenticated",
+                           authenticated=True), 200
+        return jsonify(code=400, message="No users found in the database"), 400
     except ValueError as e:
         message = str(e)
         return json.dumps({"error": message}), 400
