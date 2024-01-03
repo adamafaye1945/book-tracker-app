@@ -18,7 +18,7 @@ class DatabaseConnection:
         }
         self.conn = pymysql.connect(**self.db_config)
         self.cursor = self.conn.cursor()
-
+        self.salt = bcrypt.gensalt()
         # self.users_table = "users"
         # self.userbooks_table = "userbooks"
         # self.book_table = "books_data"
@@ -46,9 +46,9 @@ class DatabaseConnection:
         val = id
         return self._executor(sql_query, val)
 
-    def add_book_in_table(self, isbn, author_name, book_name):
-        sql_query = f"INSERT INTO books_data(author_name, ISBN, book_name) VALUES(%s, %s, %s)"
-        val = (author_name, isbn, book_name)
+    def add_book_in_book_data(self, isbn, author_name, book_name, image_link):
+        sql_query = f"INSERT INTO books_data(author_name, ISBN, book_name, image_link) VALUES(%s, %s, %s, %s)"
+        val = (author_name, isbn, book_name, image_link)
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 
@@ -60,14 +60,18 @@ class DatabaseConnection:
     def add_users(self, id, email, password):
         sql_query = "INSERT INTO users(UserID, Email, password) VALUES( %s, %s,%s)"
         # encrypting
-        password = bcrypt.hashpw(password=password)
+        password = bcrypt.hashpw(password=password.encode("utf-8"), salt=bcrypt.gensalt())
         val = (id, email, password)
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 
     def authenticate(self, email, password):
         # encrypting
-        password = bcrypt.hashpw(password=password)
-        sql_query = "SELECT UserID FROM users WHERE email = %s AND password = %s"
-        val = (email, password)
-        return self._executor(sql_query, val)
+        sql_query = "SELECT password, UserID FROM users WHERE email = %s"
+        val = email
+        result = self._executor(sql_query, val)
+        if result:
+            hashed_password = result[0]
+            if bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8")):
+                return result[1]
+        return None
