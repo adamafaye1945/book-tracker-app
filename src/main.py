@@ -1,8 +1,11 @@
 from flask import Flask, jsonify, request, abort
 from book_database import DatabaseConnection
 import json
+from flask_cors import CORS, cross_origin
+
 
 app = Flask(__name__)
+CORS(app)
 
 book_data_base = DatabaseConnection()
 
@@ -34,6 +37,7 @@ def get_book():
 
 
 @app.route("/add_book", methods=["POST"])
+@cross_origin()
 def add_book():
     try:
         data = request.get_json()
