@@ -42,7 +42,7 @@ class DatabaseConnection:
 
     def select_single_row_table(self, id, table):
         """give row knowing id"""
-        sql_query = f"SELECT * FROM {table} WHERE id = %s "
+        sql_query = f"SELECT * FROM {table} WHERE bookId = %s "
         val = id
         return self._executor(sql_query, val)
 
