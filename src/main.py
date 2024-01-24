@@ -22,9 +22,9 @@ def get_book():
             json_data = {
                 "id": data[0],
                 "author_name": data[1],
-                "ISBN": data[2],
-                "BookName": data[3],
-                "imageLink": data[4]
+                "bookName": data[2],
+                "imageURL": data[3],
+                "averageRating": data[4]
             }
             return jsonify(book_data=json_data, response=200), 200
         raise ValueError("book not found")
