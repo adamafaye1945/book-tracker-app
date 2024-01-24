@@ -20,7 +20,7 @@ def get_book():
         data = book_data_base.select_single_row_table(id=id, table='books_data')
         if data:
             json_data = {
-                "id": data[0],
+                "Bookid": data[0],
                 "author_name": data[1],
                 "bookName": data[2],
                 "imageURL": data[3],
