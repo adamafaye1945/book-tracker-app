@@ -37,16 +37,20 @@ def get_book():
 def add_book():
     try:
         data = request.get_json()
-        book_name = data.get("book_name")
-        isbn = data.get("isbn")
+        bookId = data.get("bookId")
+        book_name = data.get("title")
         author_name = data.get("author_name")
-        image_link = data.get("image_link")
-        if not book_name or not isbn or not author_name or not image_link:
-            raise ValueError("missing book information, if unknown enter them as 'NULL', also check params")
-        book_data_base.add_book_in_book_data(book_name=book_name,
-                                             isbn=isbn,
-                                             author_name=author_name,
-                                             image_link=image_link)
+        imageUrl = data.get("imageUrl")
+        averageRating = data.get("averageRating")
+        if not bookId:
+            raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
+        book_data_base.add_book_in_book_data(
+            bookId=bookId,
+            author_name=author_name,
+            image_url=imageUrl,
+            averageRating=averageRating,
+            book_name=book_name
+        )
         return jsonify(code=200, message="Book has been successfully added to database"), 200
 
     except ValueError as e:
@@ -62,7 +66,7 @@ def delete():
         return jsonify(response=200, message=f"book {id} successfully deleted from database"), 200
     except ValueError as e:
         message = str(e)
-        return jsonify(response=200, message = message), 400
+        return jsonify(response=200, message=message), 400
 
 
 @app.route("/user-management", methods=["GET", "POST"])
@@ -88,7 +92,7 @@ def user_management():
         raise ValueError("user not found")
     except ValueError as e:
         message = str(e)
-        return jsonify(message = message, response = 400), 400
+        return jsonify(message=message, response=400), 400
 
 
 if __name__ == '__main__':
