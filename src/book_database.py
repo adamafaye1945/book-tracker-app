@@ -47,10 +47,12 @@ class DatabaseConnection:
         return self._executor(sql_query, val)
 
     def add_book_in_book_data(self, bookId, author_name, book_name, image_url, averageRating):
-        sql_query = f"INSERT INTO books_data(bookId, author_name, book_name,image_url, averageRating) VALUES(%s, %s, %s, %s, %s)"
+        sql_query = f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating) VALUES(%s, %s, %s, %s, %s)"
         val = (bookId, author_name, book_name, image_url, averageRating)
         self.cursor.execute(sql_query, val)
         self.conn.commit()
+
+
 
     def delete_book(self, id):
         sql_query = "DELETE FROM books_data WHERE bookId = %s"
