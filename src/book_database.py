@@ -77,3 +77,10 @@ class DatabaseConnection:
             if bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8")):
                 return result[1]
         return None
+    def get(self, id):
+        sql_query = "SELECT * from userLogin WHERE userID = %s"
+        user = self._executor(sql_query, id)
+        if user:
+            return user
+        return None
+

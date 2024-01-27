@@ -1,20 +1,29 @@
-from flask import Flask, jsonify, request, abort
+from flask import Flask, jsonify, request
+from  flask_login import LoginManager
 from book_database import DatabaseConnection
 import json
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 import uuid
-
+from User import User
 app = Flask(__name__)
 CORS(app)
-
+login_manager = LoginManager()
+login_manager.init_app(app)
 my_database = DatabaseConnection()
+
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    userinfo = my_database.get(user_id)
+    user = User(*userinfo)
+    return user
 
 
 # initializing database
 @app.route('/')
 def index():
-    return "api for books"
-
+    return "api"
 
 @app.route("/get_book", methods=["GET"])
 def get_book():
