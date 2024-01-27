@@ -2,12 +2,12 @@ from flask import Flask, jsonify, request, abort
 from book_database import DatabaseConnection
 import json
 from flask_cors import CORS, cross_origin
-
+import uuid
 
 app = Flask(__name__)
 CORS(app)
 
-book_data_base = DatabaseConnection()
+my_database = DatabaseConnection()
 
 
 # initializing database
@@ -20,7 +20,7 @@ def index():
 def get_book():
     try:
         id = request.args.get("id")
-        data = book_data_base.select_single_row_table(id=id, table='books_data')
+        data = my_database.select_single_row_table(id=id, table='books_data')
         if data:
             json_data = {
                 "Bookid": data[0],
@@ -37,7 +37,7 @@ def get_book():
 
 
 @app.route("/add_book", methods=["POST"])
-@cross_origin()
+
 def add_book():
     try:
         data = request.get_json()
@@ -48,7 +48,7 @@ def add_book():
         averageRating = data.get("averageRating")
         if not bookId:
             raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
-        book_data_base.add_book_in_book_data(
+        my_database.add_book_in_book_data(
             bookId=bookId,
             author_name=author_name,
             image_url=imageUrl,
@@ -66,7 +66,7 @@ def add_book():
 def delete():
     try:
         id = request.args.get("id")
-        book_data_base.delete_book(id)
+        my_database.delete_book(id)
         return jsonify(response=200, message=f"book {id} successfully deleted from database"), 200
     except ValueError as e:
         message = str(e)
@@ -78,18 +78,20 @@ def user_management():
     if request.method == "POST":
         try:
             data = request.get_json()
-            id = data.get("id")
+            id = uuid.uuid4()
             email = data.get("email")
             password = data.get("password")
-            book_data_base.add_users(id, email, password)
+            name = data.get("name")
+            my_database.add_users(id=id, password=password, email=email, name = name)
             return jsonify(response=200, message="user was successfully added to database"), 200
+
         except ValueError as e:
             message = str(e)
             return json.dumps({"error": message}), 400
     try:
         email = request.args.get("email")
         password = request.args.get("password")
-        user_id = book_data_base.authenticate(email, password)
+        user_id = my_database.authenticate(email, password)
         if user_id:
             return jsonify(response=200, id=user_id, message=f"user with id {user_id} authenticated",
                            authenticated=True), 200
