@@ -52,35 +52,33 @@ class DatabaseConnection:
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 
-
-
     def delete_book(self, id):
-        sql_query = "DELETE FROM books_data WHERE bookId = %s"
+        sql_query = "DELETE FROM books_data WHERE bookID = %s"
         self.cursor.execute(sql_query, (id))
         self.conn.commit()
 
-    def add_users(self, id, email,name,  password):
-        sql_query = "INSERT INTO userLogin(UserID, Email,name,password) VALUES( %s,%s, %s,%s)"
+    def add_users(self, id, email, name, password):
+        sql_query = "INSERT INTO userLogin(UserID, Email,password,name) VALUES( %s,%s, %s,%s)"
         # encrypting
         password = bcrypt.hashpw(password=password.encode("utf-8"), salt=bcrypt.gensalt())
-        val = (id, email,name, password)
+        val = (id, email, password, name)
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 
     def authenticate(self, email, password):
-        # encrypting
-        sql_query = "SELECT name, password, UserID FROM userLogin WHERE email = %s"
+        # return user info if password and email is correct
+        sql_query = "SELECT * FROM userLogin WHERE email = %s"
         val = email
         result = self._executor(sql_query, val)
         if result:
-            hashed_password = result[0]
+            hashed_password = result[2]
             if bcrypt.checkpw(password.encode("utf-8"), hashed_password.encode("utf-8")):
-                return result[1]
+                return result
         return None
-    def get(self, id):
+
+    def retrieve_user(self, id):
         sql_query = "SELECT * from userLogin WHERE userID = %s"
         user = self._executor(sql_query, id)
         if user:
             return user
         return None
-

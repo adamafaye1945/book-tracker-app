@@ -1,21 +1,23 @@
 from flask import Flask, jsonify, request
-from  flask_login import LoginManager
+from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from book_database import DatabaseConnection
 import json
 from flask_cors import CORS
 import uuid
+import os
 from User import User
+
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY")
 CORS(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 my_database = DatabaseConnection()
 
 
-
 @login_manager.user_loader
 def load_user(user_id):
-    userinfo = my_database.get(user_id)
+    userinfo = my_database.retrieve_user(user_id)
     user = User(*userinfo)
     return user
 
@@ -23,9 +25,11 @@ def load_user(user_id):
 # initializing database
 @app.route('/')
 def index():
-    return "api"
+    return str(current_user.name)
+
 
 @app.route("/get_book", methods=["GET"])
+@login_required
 def get_book():
     try:
         id = request.args.get("id")
@@ -46,7 +50,7 @@ def get_book():
 
 
 @app.route("/add_book", methods=["POST"])
-
+@login_required
 def add_book():
     try:
         data = request.get_json()
@@ -72,6 +76,7 @@ def add_book():
 
 
 @app.route("/delete", methods=["DELETE"])
+@login_required
 def delete():
     try:
         id = request.args.get("id")
@@ -84,25 +89,29 @@ def delete():
 
 @app.route("/user-management", methods=["GET", "POST"])
 def user_management():
+    data = request.get_json()
     if request.method == "POST":
         try:
-            data = request.get_json()
             id = uuid.uuid4()
             email = data.get("email")
             password = data.get("password")
             name = data.get("name")
-            my_database.add_users(id=id, password=password, email=email, name = name)
+            my_database.add_users(id=id, password=password, email=email, name=name)
             return jsonify(response=200, message="user was successfully added to database"), 200
 
         except ValueError as e:
             message = str(e)
             return json.dumps({"error": message}), 400
     try:
-        email = request.args.get("email")
-        password = request.args.get("password")
-        user_id = my_database.authenticate(email, password)
-        if user_id:
-            return jsonify(response=200, id=user_id, message=f"user with id {user_id} authenticated",
+        email = data.get("email")
+        password = data.get("password")
+        userinfo = my_database.authenticate(email, password)
+        if userinfo:
+            user = User(*userinfo)
+            login_user(user)
+
+
+            return jsonify(response=200, id=user.id, message=f"user with id {user.id} authenticated",
                            authenticated=True), 200
         raise ValueError("user not found")
     except ValueError as e:
