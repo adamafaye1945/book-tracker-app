@@ -57,11 +57,11 @@ class DatabaseConnection:
         self.cursor.execute(sql_query, (id))
         self.conn.commit()
 
-    def add_users(self, id, email, name, password):
-        sql_query = "INSERT INTO userLogin(UserID, Email,password,name) VALUES( %s,%s, %s,%s)"
+    def add_users(self,email, name, password):
+        sql_query = "INSERT INTO userLogin(Email,password,name) VALUES( %s, %s,%s)"
         # encrypting
         password = bcrypt.hashpw(password=password.encode("utf-8"), salt=bcrypt.gensalt())
-        val = (id, email, password, name)
+        val = (email, password, name)
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 

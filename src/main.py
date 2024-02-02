@@ -90,10 +90,9 @@ def delete():
 
 @app.route("/login", methods=["GET"])
 def login():
-    data = request.get_json()
     try:
-        email = data.get("email")
-        password = data.get("password")
+        email = request.args.get("email")
+        password = request.args.get("password")
         userinfo = my_database.authenticate(email, password)
         if userinfo:
             user = User(*userinfo)
@@ -113,15 +112,14 @@ def logout():
     return jsonify(message = f"{old_user} logged out")
 
 
-@app.route("/add-user", methods=["POST"])
+@app.route("/add_user", methods=["POST"])
 def add_user():
     try:
         data = request.get_json()
-        id = uuid.uuid4()
         email = data.get("email")
         password = data.get("password")
         name = data.get("name")
-        my_database.add_users(id=id, password=password, email=email, name=name)
+        my_database.add_users( password=password, email=email, name=name)
         return jsonify(response=200, message="user was successfully added to database"), 200
 
     except ValueError as e:
