@@ -24,11 +24,18 @@ class DatabaseConnection:
         # self.book_table = "books_data"
 
     def _executor(self, sql_query, val):
+        self._ensure_database_connection()
         self.cursor.execute(sql_query, val)
         results = self.cursor.fetchall()
         if results:
             return results[0]
         return None
+
+    def _ensure_database_connection(self):
+        try:
+            self.conn.ping(reconnect=True)
+        except pymysql.err:
+            self.conn.connect()
 
     def select_column_table(self, column_name, table):
         """Return the given column"""
@@ -57,7 +64,7 @@ class DatabaseConnection:
         self.cursor.execute(sql_query, (id))
         self.conn.commit()
 
-    def add_users(self,email, name, password):
+    def add_users(self, email, name, password):
         sql_query = "INSERT INTO userLogin(Email,password,name) VALUES( %s, %s,%s)"
         # encrypting
         password = bcrypt.hashpw(password=password.encode("utf-8"), salt=bcrypt.gensalt())
