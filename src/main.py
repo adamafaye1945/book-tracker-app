@@ -99,8 +99,11 @@ def login():
         if userinfo:
             user = User(*userinfo)
             login_user(user)
-            return jsonify(response=200, id=user.id, message=f"user with id {user.id} authenticated",
-                           authenticated=True), 200
+            returned_user = {
+                "id": user.id,
+                "name": user.name,
+            }
+            return jsonify(user = returned_user), 200
         raise ValueError("user not found")
     except ValueError as e:
         message = str(e)
