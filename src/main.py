@@ -20,8 +20,10 @@ my_database = DatabaseConnection()
 @login_manager.user_loader
 def load_user(user_id):
     userinfo = my_database.retrieve_user(user_id)
-    user = User(*userinfo)
-    return user
+    if userinfo:
+        user = User(*userinfo)
+        return user
+    return None
 
 
 # initializing database
@@ -57,15 +59,13 @@ def get_book():
 def add_book():
     try:
         data = request.get_json()
-        bookId = data.get("bookId")
         book_name = data.get("title")
         author_name = data.get("author_name")
         imageUrl = data.get("imageUrl")
         averageRating = data.get("averageRating")
-        if not bookId:
+        if not book_name or not author_name:
             raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
         my_database.add_book_in_book_data(
-            bookId=bookId,
             author_name=author_name,
             image_url=imageUrl,
             averageRating=averageRating,
@@ -99,10 +99,11 @@ def login():
         if userinfo:
             user = User(*userinfo)
             login_user(user)
-            returned_user = {
-                "id": user.id,
-                "name": user.name,
-            }
+            if user.is_authenticated:
+                returned_user = {
+                    "id": user.id,
+                    "name": user.name,
+                }
             return jsonify(user = returned_user), 200
         raise ValueError("user not found")
     except ValueError as e:
