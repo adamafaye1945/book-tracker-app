@@ -1,39 +1,29 @@
 from flask import Flask, jsonify, request
-from flask_login import LoginManager, login_user, current_user, login_required, logout_user
 from book_database import DatabaseConnection
 import json
 from flask_cors import CORS
-import uuid
 import os
-from User import User
 from dotenv import load_dotenv
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager
+from User import User
+
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+app.config['JWT_SECRET_KEY'] = os.getenv("SECRET_KEY")
+jwt = JWTManager(app)
 CORS(app)
-login_manager = LoginManager()
-login_manager.init_app(app)
 my_database = DatabaseConnection()
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    userinfo = my_database.retrieve_user(user_id)
-    if userinfo:
-        user = User(*userinfo)
-        return user
-    return None
-
-
-# initializing database
 @app.route('/')
 def index():
     return str(current_user.name)
 
 
 @app.route("/get_book", methods=["GET"])
-@login_required
+@jwt_required()
 def get_book():
     # route will return a book json
     try:
@@ -55,17 +45,19 @@ def get_book():
 
 
 @app.route("/add_book", methods=["POST"])
-@login_required
+@jwt_required
 def add_book():
     try:
         data = request.get_json()
+        bookId = data.get("bookId")
         book_name = data.get("title")
         author_name = data.get("author_name")
         imageUrl = data.get("imageUrl")
         averageRating = data.get("averageRating")
-        if not book_name or not author_name:
+        if not bookId or not book_name or not author_name:
             raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
         my_database.add_book_in_book_data(
+            bookId=bookId,
             author_name=author_name,
             image_url=imageUrl,
             averageRating=averageRating,
@@ -79,7 +71,6 @@ def add_book():
 
 
 @app.route("/delete", methods=["DELETE"])
-@login_required
 def delete():
     try:
         id = request.args.get("id")
@@ -98,24 +89,18 @@ def login():
         userinfo = my_database.authenticate(email, password)
         if userinfo:
             user = User(*userinfo)
-            login_user(user)
-            if user.is_authenticated:
-                returned_user = {
-                    "id": user.id,
-                    "name": user.name,
-                }
-            return jsonify(user = returned_user), 200
-        raise ValueError("user not found")
-    except ValueError as e:
-        message = str(e)
-        return jsonify(message=message, response=400), 400
+            access_token = create_access_token(user.id)
+            return jsonify(id=user.id,
+                           name=user.name,
+                           access_token=access_token), 200
+        raise ValueError("User not found")
+    except ValueError:
+        return jsonify(message="user not found"), 400
 
 
 @app.route("/logout")
 def logout():
-    old_user = current_user.name
-    logout_user()
-    return jsonify(message = f"{old_user} logged out")
+    pass
 
 
 @app.route("/add_user", methods=["POST"])
@@ -125,7 +110,7 @@ def add_user():
         email = data.get("email")
         password = data.get("password")
         name = data.get("name")
-        my_database.add_users( password=password, email=email, name=name)
+        my_database.add_users(password=password, email=email, name=name)
         return jsonify(response=200, message="user was successfully added to database"), 200
 
     except ValueError as e:
