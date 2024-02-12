@@ -45,7 +45,7 @@ def get_book():
 
 
 @app.route("/add_book", methods=["POST"])
-@jwt_required
+@jwt_required()
 def add_book():
     try:
         data = request.get_json()
