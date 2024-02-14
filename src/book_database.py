@@ -53,8 +53,8 @@ class DatabaseConnection:
         val = id
         return self._executor(sql_query, val)
 
-    def add_book_in_book_data(self,bookId,author_name, book_name, image_url, averageRating):
-        sql_query = (f"INSERT INTO books_data( bookId, authors, book_name,imageURL, averageRating) VALUES(%s, %s, %s, "
+    def add_book_in_book_data(self,bookId, author_name, book_name, image_url, averageRating):
+        sql_query = (f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating) VALUES( %s, %s, %s, "
                      f"%s, %s)")
         val = (bookId, author_name, book_name, image_url, averageRating)
         self.cursor.execute(sql_query, val)

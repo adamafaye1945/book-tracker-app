@@ -47,24 +47,25 @@ def get_book():
 @app.route("/add_book", methods=["POST"])
 @jwt_required()
 def add_book():
+    data_bulk = request.get_json()
+    print(data_bulk)
     try:
-        data = request.get_json()
-        bookId = data.get("bookId")
-        book_name = data.get("title")
-        author_name = data.get("author_name")
-        imageUrl = data.get("imageUrl")
-        averageRating = data.get("averageRating")
-        if not bookId or not book_name or not author_name:
-            raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
-        my_database.add_book_in_book_data(
-            bookId=bookId,
-            author_name=author_name,
-            image_url=imageUrl,
-            averageRating=averageRating,
-            book_name=book_name
-        )
-        return jsonify(code=200, message="Book has been successfully added to database"), 200
-
+        for data in data_bulk:
+            bookId = data["bookId"]
+            book_name = data["title"]
+            author_name = data["author_name"]
+            imageUrl = data["imageUrl"]
+            averageRating = data["averageRating"]
+            if not bookId or not book_name or not author_name:
+                raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
+            my_database.add_book_in_book_data(
+                bookId=bookId,
+                author_name=author_name,
+                image_url=imageUrl,
+                averageRating=averageRating,
+                book_name=book_name
+            )
+        return jsonify(message="addition to db was successful"), 200
     except ValueError as e:
         message = str(e)
         return jsonify(message=message, response=400), 400
