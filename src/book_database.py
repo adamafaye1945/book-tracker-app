@@ -31,6 +31,12 @@ class DatabaseConnection:
             return results[0]
         return None
 
+    def _duplicate_checker(self, id):
+        sql_query = "SELECT * FROM books_data WHERE bookId = %s"
+        if self._executor(sql_query, id):
+            return True
+        return False
+
     def _ensure_database_connection(self):
         try:
             self.conn.ping(reconnect=True)
@@ -53,7 +59,9 @@ class DatabaseConnection:
         val = id
         return self._executor(sql_query, val)
 
-    def add_book_in_book_data(self,bookId, author_name, book_name, image_url, averageRating):
+    def add_book_in_book_data(self, bookId, author_name, book_name, image_url, averageRating):
+        if self._duplicate_checker(bookId):
+            return
         sql_query = (f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating) VALUES( %s, %s, %s, "
                      f"%s, %s)")
         val = (bookId, author_name, book_name, image_url, averageRating)
