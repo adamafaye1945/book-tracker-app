@@ -19,9 +19,7 @@ class DatabaseConnection:
         self.conn = pymysql.connect(**self.db_config)
         self.cursor = self.conn.cursor()
         self.salt = bcrypt.gensalt()
-        # self.users_table = "users"
-        # self.userbooks_table = "userbooks"
-        # self.book_table = "books_data"
+
 
     def _executor(self, sql_query, val):
         self._ensure_database_connection()
@@ -32,6 +30,7 @@ class DatabaseConnection:
         return None
 
     def _duplicate_checker(self, id):
+        """check duplicate entry for books_data"""
         sql_query = "SELECT * FROM books_data WHERE bookId = %s"
         if self._executor(sql_query, id):
             return True
@@ -65,6 +64,18 @@ class DatabaseConnection:
         sql_query = (f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating) VALUES( %s, %s, %s, "
                      f"%s, %s)")
         val = (bookId, author_name, book_name, image_url, averageRating)
+        self._ensure_database_connection()
+        self.cursor.execute(sql_query, val)
+        self.conn.commit()
+    def adding_reflection_and_rating(self, user_id, reflection, rating, bookID):
+        # checking if there is a duplicate
+        sql_query_check = "SELECT COUNT(*) FROM userAction WHERE userId = %s AND bookId = %s"
+        val_check = (user_id, bookID)
+        if int(self._executor(sql_query_check, val_check)[0]) > 0:
+            return
+        sql_query = "INSERT INTO userAction (userId, bookId, reflection, rating) VALUES (%s, %s, %s, %s)"
+        val = (user_id, bookID, reflection, rating)
+        self._ensure_database_connection()
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 

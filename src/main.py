@@ -4,7 +4,7 @@ import json
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
-from flask_jwt_extended import create_access_token, jwt_required, JWTManager
+from flask_jwt_extended import create_access_token, jwt_required, JWTManager, get_jwt_identity
 from User import User
 
 load_dotenv()
@@ -17,9 +17,13 @@ CORS(app)
 my_database = DatabaseConnection()
 
 
+
 @app.route('/')
+@jwt_required()
 def index():
-    return str(current_user.name)
+
+    current_user = get_jwt_identity()
+    return str(current_user)
 
 
 @app.route("/get_book", methods=["GET"])
@@ -48,6 +52,7 @@ def get_book():
 @jwt_required()
 def add_book():
     data_bulk = request.get_json()
+    user_id = get_jwt_identity()
     print(data_bulk)
     try:
         for data in data_bulk:
@@ -56,6 +61,8 @@ def add_book():
             author_name = data["author_name"]
             imageUrl = data["imageUrl"]
             averageRating = data["averageRating"]
+            user_rating = data["userRating"]
+            user_reflection = data["reflection"]
             if not bookId or not book_name or not author_name:
                 raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
             my_database.add_book_in_book_data(
@@ -65,6 +72,13 @@ def add_book():
                 averageRating=averageRating,
                 book_name=book_name
             )
+            if user_reflection and user_rating:
+                my_database.adding_reflection_and_rating(
+                    user_id=user_id,
+                    reflection=user_reflection,
+                    bookID=bookId,
+                    rating=user_rating
+                )
         return jsonify(message="addition to db was successful"), 200
     except ValueError as e:
         message = str(e)
