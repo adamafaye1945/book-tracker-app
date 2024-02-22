@@ -29,23 +29,15 @@ def index():
 @app.route("/get_book", methods=["GET"])
 @jwt_required()
 def get_book():
-    # route will return a book json
+    id = get_jwt_identity()
     try:
-        id = request.args.get("id")
-        data = my_database.select_single_row_table(id=id, table='books_data')
-        if data:
-            json_data = {
-                "Bookid": data[0],
-                "author_name": data[1],
-                "bookName": data[2],
-                "imageURL": data[3],
-                "averageRating": data[4]
-            }
+        json_data = my_database.get_books(id)
+        if json_data:
             return jsonify(book_data=json_data, response=200), 200
-        raise ValueError("book not found")
+        return jsonify(book_data=[], response = 200), 200
     except ValueError as e:
-        message = str(e)
-        return jsonify(message=message, response=400), 400
+
+        return jsonify(message="error", response=400), 400
 
 
 @app.route("/add_book", methods=["POST"])

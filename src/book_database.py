@@ -57,6 +57,25 @@ class DatabaseConnection:
         sql_query = f"SELECT * FROM {table} WHERE bookId = %s "
         val = id
         return self._executor(sql_query, val)
+    def get_books(self, id):
+        # getting bookids added by the user
+        sql_query_for_bookid = "SELECT bookId FROM userAction WHERE userId = %s"
+        self.cursor.execute(sql_query_for_bookid, id)
+        result = self.cursor.fetchall()
+        #cleaning
+        book_ids = [element[0] for element in result]
+        data_bulk = []
+        for bookid in book_ids:
+            data = self.select_single_row_table(bookid, "books_data")
+            json_data = {
+                "bookId": data[0],
+                "authors": data[1],
+                "book_name":data[2],
+                "image_url":data[3],
+                "averageRating":data[4],
+            }
+            data_bulk.append(json_data)
+        return data_bulk
 
     def add_book_in_book_data(self, bookId, author_name, book_name, image_url, averageRating):
         if self._duplicate_checker(bookId):
