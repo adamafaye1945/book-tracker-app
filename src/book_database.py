@@ -70,8 +70,8 @@ class DatabaseConnection:
             json_data = {
                 "bookId": data[0],
                 "authors": data[1],
-                "book_name":data[2],
-                "image_url":data[3],
+                "title":data[2],
+                "imageUrl":data[3],
                 "averageRating":data[4],
                 "tracked": True,
                 "publisher": data[5]
