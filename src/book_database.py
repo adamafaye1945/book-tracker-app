@@ -59,14 +59,12 @@ class DatabaseConnection:
         return self._executor(sql_query, val)
     def get_books(self, id):
         # getting bookids added by the user
-        sql_query_for_bookid = "SELECT bookId FROM userAction WHERE userId = %s"
-        self.cursor.execute(sql_query_for_bookid, id)
+        sql_query_for_usreflection = "SELECT bookId, reflection, rating FROM userAction WHERE userId = %s"
+        self.cursor.execute(sql_query_for_usreflection, id)
         result = self.cursor.fetchall()
-        #cleaning
-        book_ids = [element[0] for element in result]
         data_bulk = []
-        for bookid in book_ids:
-            data = self.select_single_row_table(bookid, "books_data")
+        for query_result in result:
+            data = self.select_single_row_table(id=query_result[0], table="books_data")
             json_data = {
                 "bookId": data[0],
                 "authors": data[1],
@@ -74,7 +72,9 @@ class DatabaseConnection:
                 "imageUrl":data[3],
                 "averageRating":data[4],
                 "tracked": True,
-                "publisher": data[5]
+                "publisher": data[5],
+                "reflection":query_result[1],
+                "userRating":query_result[2]
             }
             data_bulk.append(json_data)
         return data_bulk
