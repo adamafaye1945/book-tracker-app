@@ -74,7 +74,8 @@ class DatabaseConnection:
                 "tracked": True,
                 "publisher": data[5],
                 "reflection":query_result[1],
-                "userRating":query_result[2]
+                "userRating":query_result[2],
+                "reviewed": True
             }
             data_bulk.append(json_data)
         return data_bulk
