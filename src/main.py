@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, url_for, redirect
 from book_database import DatabaseConnection
 import json
 from flask_cors import CORS
@@ -45,7 +45,7 @@ def get_book():
 def add_book():
     data_bulk = request.get_json()
     user_id = get_jwt_identity()
-    print(data_bulk)
+
     try:
         for data in data_bulk:
             bookId = data["bookId"]
@@ -53,6 +53,7 @@ def add_book():
             author_name = data["author_name"]
             imageUrl = data["imageUrl"]
             averageRating = data["averageRating"]
+            publisher = data["publisher"]
             user_rating = data["userRating"]
             user_reflection = data["reflection"]
             if not bookId or not book_name or not author_name:
@@ -62,7 +63,8 @@ def add_book():
                 author_name=author_name,
                 image_url=imageUrl,
                 averageRating=averageRating,
-                book_name=book_name
+                book_name=book_name,
+                publisher = publisher
             )
             if user_reflection and user_rating:
                 my_database.adding_reflection_and_rating(
@@ -100,6 +102,7 @@ def login():
             return jsonify(id=user.id,
                            name=user.name,
                            access_token=access_token), 200
+
         raise ValueError("User not found")
     except ValueError:
         return jsonify(message="user not found"), 400

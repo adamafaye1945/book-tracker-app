@@ -73,16 +73,18 @@ class DatabaseConnection:
                 "book_name":data[2],
                 "image_url":data[3],
                 "averageRating":data[4],
+                "tracked": True,
+                "publisher": data[5]
             }
             data_bulk.append(json_data)
         return data_bulk
 
-    def add_book_in_book_data(self, bookId, author_name, book_name, image_url, averageRating):
+    def add_book_in_book_data(self, bookId, author_name, book_name, image_url, averageRating, publisher):
         if self._duplicate_checker(bookId):
             return
-        sql_query = (f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating) VALUES( %s, %s, %s, "
-                     f"%s, %s)")
-        val = (bookId, author_name, book_name, image_url, averageRating)
+        sql_query = (f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating, publisher) VALUES( %s, %s, %s, "
+                     f"%s, %s, %s)")
+        val = (bookId, author_name, book_name, image_url, averageRating, publisher)
         self._ensure_database_connection()
         self.cursor.execute(sql_query, val)
         self.conn.commit()
