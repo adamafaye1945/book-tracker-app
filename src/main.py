@@ -49,44 +49,45 @@ def add_book():
     try:
         for data in data_bulk:
             bookId = data["bookId"]
-            book_name = data["title"]
-            author_name = data["author_name"]
-            imageUrl = data["imageUrl"]
-            averageRating = data["averageRating"]
-            publisher = data["publisher"]
-            user_rating = data["userRating"]
-            user_reflection = data["reflection"]
-            if not bookId or not book_name or not author_name:
-                raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
-            my_database.add_book_in_book_data(
-                bookId=bookId,
-                author_name=author_name,
-                image_url=imageUrl,
-                averageRating=averageRating,
-                book_name=book_name,
-                publisher = publisher
-            )
-            my_database.adding_reflection_and_rating(
-                user_id=user_id,
-                reflection=user_reflection,
-                bookID=bookId,
-                rating=user_rating
-            )
-        return jsonify(message="addition to db was successful"), 200
+            # sign rom client to delete a book
+            if data["untracked"] == True:
+                delete(bookId)
+            else:
+                book_name = data["title"]
+                author_name = data["author_name"]
+                imageUrl = data["imageUrl"]
+                averageRating = data["averageRating"]
+                publisher = data["publisher"]
+                user_rating = data["userRating"]
+                user_reflection = data["reflection"]
+
+                if not bookId or not book_name or not author_name:
+                    raise ValueError("missing book id information, if unknown enter them as 'NULL', also check params")
+                my_database.add_book_in_book_data(
+                    bookId=bookId,
+                    author_name=author_name,
+                    image_url=imageUrl,
+                    averageRating=averageRating,
+                    book_name=book_name,
+                    publisher = publisher
+                )
+                my_database.adding_reflection_and_rating(
+                    user_id=user_id,
+                    reflection=user_reflection,
+                    bookID=bookId,
+                    rating=user_rating
+                )
+        return jsonify(message="db was successfully updated"), 200
     except ValueError as e:
         message = str(e)
         return jsonify(message=message, response=400), 400
 
 
-@app.route("/delete", methods=["DELETE"])
-def delete():
+def delete(bookId):
     try:
-        id = request.args.get("id")
-        my_database.delete_book(id)
-        return jsonify(response=200, message=f"book {id} successfully deleted from database"), 200
+        my_database.delete_book(bookId)
     except ValueError as e:
         message = str(e)
-        return jsonify(response=200, message=message), 400
 
 
 @app.route("/login", methods=["GET"])
