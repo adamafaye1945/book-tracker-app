@@ -63,6 +63,8 @@ class DatabaseConnection:
         self.cursor.execute(sql_query_for_usreflection, id)
         result = self.cursor.fetchall()
         data_bulk = []
+        if not result:
+            return data_bulk
         for query_result in result:
             data = self.select_single_row_table(id=query_result[0], table="books_data")
             json_data = {
@@ -75,7 +77,7 @@ class DatabaseConnection:
                 "publisher": data[5],
                 "reflection":query_result[1],
                 "userRating":query_result[2],
-                "reviewed": True
+                "reviewed": True if query_result[1] != "" and query_result[2] != 0 else False
             }
             data_bulk.append(json_data)
         return data_bulk

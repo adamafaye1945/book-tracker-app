@@ -32,7 +32,7 @@ def get_book():
     id = get_jwt_identity()
     try:
         json_data = my_database.get_books(id)
-        if json_data:
+        if len(json_data) > 0:
             return jsonify(book_data=json_data, response=200), 200
         return jsonify(book_data=[], response = 200), 200
     except ValueError as e:
@@ -66,13 +66,12 @@ def add_book():
                 book_name=book_name,
                 publisher = publisher
             )
-            if user_reflection and user_rating:
-                my_database.adding_reflection_and_rating(
-                    user_id=user_id,
-                    reflection=user_reflection,
-                    bookID=bookId,
-                    rating=user_rating
-                )
+            my_database.adding_reflection_and_rating(
+                user_id=user_id,
+                reflection=user_reflection,
+                bookID=bookId,
+                rating=user_rating
+            )
         return jsonify(message="addition to db was successful"), 200
     except ValueError as e:
         message = str(e)
