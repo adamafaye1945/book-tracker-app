@@ -107,11 +107,8 @@ class DatabaseConnection:
         self.conn.commit()
 
     def delete_book(self, id):
-        sql_query_for_books = "DELETE FROM books_data WHERE bookID = %s"
         sql_query_for_userAction = "DELETE FROM userAction WHERE bookID = %s"
         self._ensure_database_connection()
-        self.cursor.execute(sql_query_for_books, id)
-        self.conn.commit()
         self.cursor.execute(sql_query_for_userAction, id)
         self.conn.commit()
     def add_users(self, email, name, password):
