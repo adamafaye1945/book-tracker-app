@@ -93,13 +93,16 @@ class DatabaseConnection:
         self.conn.commit()
     def adding_reflection_and_rating(self, user_id, reflection, rating, bookID):
         # checking if there is a duplicate
+        self._ensure_database_connection()
         sql_query_check = "SELECT COUNT(*) FROM userAction WHERE userId = %s AND bookId = %s"
         val_check = (user_id, bookID)
-        if int(self._executor(sql_query_check, val_check)[0]) > 0:
-            return
-        sql_query = "INSERT INTO userAction (userId, bookId, reflection, rating) VALUES (%s, %s, %s, %s)"
-        val = (user_id, bookID, reflection, rating)
-        self._ensure_database_connection()
+        if int(self._executor(sql_query_check, val_check)[0]) > 0:# reflection already exist we update
+            sql_query = "UPDATE userAction SET reflection = %s, rating =%s WHERE bookId = %s "
+            val = (reflection, rating, bookID)
+        else:
+            sql_query = "INSERT INTO userAction (userId, bookId, reflection, rating) VALUES (%s, %s, %s, %s)"
+            val = (user_id, bookID, reflection, rating)
+
         self.cursor.execute(sql_query, val)
         self.conn.commit()
 
