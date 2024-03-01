@@ -130,9 +130,9 @@ class DatabaseConnection:
                 return result
         return None
 
-    def retrieve_user(self, id):
-        sql_query = "SELECT * from userLogin WHERE userID = %s"
+    def retrieve_user(self, email):
+        sql_query = "SELECT * from userLogin WHERE email = %s"
         user = self._executor(sql_query, id)
         if user:
-            return user
-        return None
+            return True
+        return False

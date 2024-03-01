@@ -118,8 +118,10 @@ def add_user():
         email = data.get("email")
         password = data.get("password")
         name = data.get("name")
+        if my_database.retrieve_user(email):
+            return jsonify( message = "user already exist"), 409
         my_database.add_users(password=password, email=email, name=name)
-        return jsonify(response=200, message="user was successfully added to database"), 200
+        return jsonify( message="user was successfully added to database"), 200
 
     except ValueError as e:
         message = str(e)
