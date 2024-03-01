@@ -51,7 +51,7 @@ def add_book():
             bookId = data["bookId"]
             # sign rom client to delete a book
             if data["untracked"] == True:
-                delete(bookId)
+                my_database.delete_book(bookId)
             else:
                 book_name = data["title"]
                 author_name = data["author_name"]
@@ -83,11 +83,9 @@ def add_book():
         return jsonify(message=message, response=400), 400
 
 
-def delete(bookId):
-    try:
-        my_database.delete_book(bookId)
-    except ValueError as e:
-        message = str(e)
+
+
+
 
 
 @app.route("/login", methods=["GET"])
