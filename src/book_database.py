@@ -132,7 +132,7 @@ class DatabaseConnection:
 
     def retrieve_user(self, email):
         sql_query = "SELECT * from userLogin WHERE email = %s"
-        user = self._executor(sql_query, id)
+        user = self._executor(sql_query, email)
         if user:
             return True
         return False
