@@ -20,6 +20,10 @@ class DatabaseConnection:
         self.cursor = self.conn.cursor()
         self.salt = bcrypt.gensalt()
 
+    def commit(self, sql_query, val):
+        self._ensure_database_connection()
+        self.cursor.execute(sql_query, val)
+        self.conn.commit()
 
     def _executor(self, sql_query, val):
         self._ensure_database_connection()
@@ -57,6 +61,7 @@ class DatabaseConnection:
         sql_query = f"SELECT * FROM {table} WHERE bookId = %s "
         val = id
         return self._executor(sql_query, val)
+
     def get_books(self, id):
         # getting bookids added by the user
         sql_query_for_usreflection = "SELECT bookId, reflection, rating FROM userAction WHERE userId = %s"
@@ -70,13 +75,13 @@ class DatabaseConnection:
             json_data = {
                 "bookId": data[0],
                 "authors": data[1],
-                "title":data[2],
-                "imageUrl":data[3],
-                "averageRating":data[4],
+                "title": data[2],
+                "imageUrl": data[3],
+                "averageRating": data[4],
                 "tracked": True,
                 "publisher": data[5],
-                "reflection":query_result[1],
-                "userRating":query_result[2],
+                "reflection": query_result[1],
+                "userRating": query_result[2],
                 "reviewed": True if query_result[1] != "" and query_result[2] != 0 else False
             }
             data_bulk.append(json_data)
@@ -85,39 +90,36 @@ class DatabaseConnection:
     def add_book_in_book_data(self, bookId, author_name, book_name, image_url, averageRating, publisher):
         if self._duplicate_checker(bookId):
             return
-        sql_query = (f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating, publisher) VALUES( %s, %s, %s, "
-                     f"%s, %s, %s)")
+        sql_query = (
+            f"INSERT INTO books_data(bookId, authors, book_name,imageURL, averageRating, publisher) VALUES( %s, %s, %s, "
+            f"%s, %s, %s)")
         val = (bookId, author_name, book_name, image_url, averageRating, publisher)
-        self._ensure_database_connection()
-        self.cursor.execute(sql_query, val)
-        self.conn.commit()
+        self.commit(sql_query, val)
+
     def adding_reflection_and_rating(self, user_id, reflection, rating, bookID):
         # checking if there is a duplicate
         self._ensure_database_connection()
         sql_query_check = "SELECT COUNT(*) FROM userAction WHERE userId = %s AND bookId = %s"
         val_check = (user_id, bookID)
-        if int(self._executor(sql_query_check, val_check)[0]) > 0:# reflection already exist we update
+        if int(self._executor(sql_query_check, val_check)[0]) > 0:  # reflection already exist we update
             sql_query = "UPDATE userAction SET reflection = %s, rating =%s WHERE bookId = %s "
             val = (reflection, rating, bookID)
         else:
             sql_query = "INSERT INTO userAction (userId, bookId, reflection, rating) VALUES (%s, %s, %s, %s)"
             val = (user_id, bookID, reflection, rating)
 
-        self.cursor.execute(sql_query, val)
-        self.conn.commit()
+        self.commit(sql_query, val)
 
     def delete_book(self, id):
         sql_query_for_userAction = "DELETE FROM userAction WHERE bookID = %s"
-        self._ensure_database_connection()
-        self.cursor.execute(sql_query_for_userAction, id)
-        self.conn.commit()
+        self.commit(sql_query_for_userAction, id)
+
     def add_users(self, email, name, password):
         sql_query = "INSERT INTO userLogin(Email,password,name) VALUES( %s, %s,%s)"
         # encrypting
         password = bcrypt.hashpw(password=password.encode("utf-8"), salt=bcrypt.gensalt())
         val = (email, password, name)
-        self.cursor.execute(sql_query, val)
-        self.conn.commit()
+        self.commit(sql_query, val)
 
     def authenticate(self, email, password):
         # return user info if password and email is correct
@@ -130,9 +132,41 @@ class DatabaseConnection:
                 return result
         return None
 
-    def retrieve_user(self, email):
+    def retrieve_user(self, email=None, name=None, id=None):
+        if id:
+            print(id)
+            sql_query = "SELECT userid from userLogin WHERE userid = %s"
+            user = self._executor(sql_query, id)
+            return user[0]
+
         sql_query = "SELECT * from userLogin WHERE email = %s"
         user = self._executor(sql_query, email)
+        print(user)
         if user:
             return True
         return False
+
+    def create_frienship(self, userid, new_friend):
+        # code work fine add friend by user id but it;s adding some already added no duplicate allowed also you can't add yourself.
+        # next up is adding picture.
+        # CHECK IF USER IS IN THERE
+        query = "SELECT friend1 FROM friendship WHERE friend1 = %s"
+        id_exist = self._executor(sql_query=query, val=userid)
+
+        # can't add yourself
+        if id_exist and id_exist[0] == userid:
+            return False
+        if id_exist:  # can't add yourself
+            sql_query = ("UPDATE friendship SET userFriend = JSON_ARRAY_APPEND("
+                         "userFriend,'$', %s ) WHERE friend1 =%s")
+            val = (new_friend, userid)
+
+        else:  # adding user for  the first time
+            sql_query = "INSERT INTO friendship(friend1, userFriend) VALUES(%s, '[%s]')"
+            val = (userid, new_friend)
+
+        self.commit(sql_query, val)
+        return True
+
+    def end_friendship(self):
+        pass

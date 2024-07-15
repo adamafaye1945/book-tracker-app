@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager, get_jwt_identity
 from User import User
-
+from datetime import timedelta
 load_dotenv()
 
 app = Flask(__name__)
@@ -96,7 +96,7 @@ def login():
         userinfo = my_database.authenticate(email, password)
         if userinfo:
             user = User(*userinfo)
-            access_token = create_access_token(user.id)
+            access_token = create_access_token(identity=user.id, expires_delta=timedelta(minutes=20))
             return jsonify(id=user.id,
                            name=user.name,
                            access_token=access_token), 200
@@ -126,7 +126,23 @@ def add_user():
     except ValueError as e:
         message = str(e)
         return json.dumps({"error": message}), 400
+@app.route("/add_friend", methods= ["POST"])
+@jwt_required()
 
+def add_friend():
+    id = get_jwt_identity()
+    try:
+        data = request.get_json()
+        friend = data.get("friend_id")
+        friend_a_user = my_database.retrieve_user(id=friend)
+        if not friend_a_user:
+            raise ValueError ('user is not in the database')
+        if my_database.create_frienship(userid=id, new_friend=friend_a_user):
+            return jsonify(message="friendship set!"), 200
+        return jsonify(message ="you can't add yourself"), 400
+    except ValueError as e:
+        message = str(e)
+        return jsonify(message=message, response=400), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
