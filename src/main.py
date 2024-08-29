@@ -7,8 +7,9 @@ from flask_jwt_extended import create_access_token, jwt_required, JWTManager, ge
 from User import User
 from datetime import timedelta
 
-load_dotenv()
 
+load_dotenv()
+redis_client = redis.StrictRedis(decode_responses=True)
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 app.config['JWT_SECRET_KEY'] = os.getenv("SECRET_KEY")
@@ -87,7 +88,7 @@ def login():
         userinfo = my_database.authenticate(email, password)
         if userinfo:
             user = User(*userinfo)
-            access_token = create_access_token(identity=user.id, expires_delta=timedelta(minutes=20))
+            access_token = create_access_token(identity=user.id)
             return jsonify(id=user.id, name=user.name, access_token=access_token), 200
 
         raise ValueError("User not found")
