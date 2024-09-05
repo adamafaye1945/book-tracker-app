@@ -125,10 +125,7 @@ def add_friend():
     try:
         data = request.get_json()
         friend = data.get("friend_id")
-        friend_a_user = my_database.retrieve_user(user_id=friend)
-        if not friend_a_user:
-            raise ValueError('User is not in the database')
-        if my_database.create_friendship(user_id=id, new_friend_id=friend_a_user):
+        if my_database.create_friendship(user_id=id, new_friend_id=int(friend)):
             return jsonify(message="Friendship set!"), 200
         return jsonify(message="You can't add yourself"), 400
     except ValueError as e:

@@ -166,7 +166,8 @@ class DatabaseConnection:
         if user_id == new_friend_id:
             return False
 
-        query = "SELECT friend1 FROM friendship WHERE friend1 = %s"
+        # check if we have a node already if so we add the new freind if not we create a node and add friend
+        query= "SELECT friend1 FROM friendship WHERE friend1 = %s"
         id_exist = self.execute_query(query, (user_id,))
 
         if id_exist:
