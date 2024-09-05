@@ -1,3 +1,5 @@
+import json
+
 import pymysql
 from dotenv import load_dotenv
 import os
@@ -129,13 +131,25 @@ class DatabaseConnection:
                 return result[0]
         return None
 
+    def retrieve_user_friend(self, userid):
+        sql_query_for_id = "SELECT userFriend FROM friendship WHERE friend1= %s"
+        user_friends = self.execute_query(sql_query=sql_query_for_id, val=(userid,))
+        if user_friends:
+            id_list = json.loads(user_friends[0][0])
+            print(id_list)
+            res = []
+            for id in id_list:
+                userid, name = self.retrieve_user(user_id=id)
+                res.append({"userid": userid, "name": name})
+            return res
+        return []
     def retrieve_user(self, email=None, name=None, user_id=None):
         if name:
             sql_query = "SELECT userId, name FROM userLogin WHERE name LIKE %s"
             users = self.execute_query(sql_query, ("%" + name + "%",))
             return users
         if user_id:
-            sql_query = "SELECT userId FROM userLogin WHERE userId = %s"
+            sql_query = "SELECT userId, name FROM userLogin WHERE userId = %s"
             user = self.execute_query(sql_query, (user_id,))
             if user:
                 return user[0]

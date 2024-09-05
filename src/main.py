@@ -88,8 +88,8 @@ def login():
         if userinfo:
             user = User(*userinfo)
             access_token = create_access_token(identity=user.id, expires_delta=timedelta(days=1))
-
-            return jsonify(id=user.id, name=user.name, access_token=access_token), 200
+            users = my_database.retrieve_user_friend(userid=user.id)
+            return jsonify(id=user.id, name=user.name, access_token=access_token,user_friends= users), 200
 
         raise ValueError("User not found")
     except ValueError:
