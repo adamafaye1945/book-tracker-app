@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager, get_jwt_identity
 from User import User
 from datetime import timedelta
-
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 load_dotenv()
 app = Flask(__name__)
@@ -15,6 +16,40 @@ app.config['JWT_SECRET_KEY'] = os.getenv("SECRET_KEY")
 jwt = JWTManager(app)
 CORS(app)
 my_database = DatabaseConnection()
+
+
+# firebase
+
+cred = credentials.Certificate(os.getenv("FIREBASE_JSON"))
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+def send_message(sender_id, receiver_id, chat_id, message):
+    # Store the message in Firestore
+    doc_ref = db.collection('chats').document(chat_id).collection('messages').document()
+    doc_ref.set({
+        'sender_id': sender_id,
+        'receiver_id': receiver_id,
+        'message': message,
+        'timestamp': firestore.SERVER_TIMESTAMP
+    })
+
+    return {"status": "success", "message": "Message sent"}
+@app.route("/send_message", methods =["POST"])
+def message_route():
+    data = request.get_json()
+    chat_id = data["chat_id"]
+    sender_id = data["sender_id"]
+    receiver_id = data["receiver_id"]
+    message = data["message"]
+    try:
+        response = send_message(sender_id=sender_id, receiver_id=receiver_id, message=message, chat_id = chat_id)
+    except:
+        return jsonify(response="error sending message"), 400
+
+    return jsonify(response = response), 200
+
+
+
 
 
 @app.route('/')
