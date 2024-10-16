@@ -152,20 +152,33 @@ def add_user():
         message = str(e)
         return jsonify(error=message), 400
 
-
-@app.route("/add_friend", methods=["POST"])
+@app.route("/sendFriendRequest", methods =["POST"])
 @jwt_required()
-def add_friend():
+def send_request():
     id = get_jwt_identity()
     try:
-        data = request.get_json()
-        friend = data.get("friend_id")
-        if my_database.create_friendship(user_id=id, new_friend_id=int(friend)):
-            return jsonify(message="Friendship set!"), 200
-        return jsonify(message="You can't add yourself"), 400
-    except ValueError as e:
-        message = str(e)
-        return jsonify(message=message, response=400), 400
+        receiver_id = request.args.get("receiverId")
+        my_database.create_request(sender_id=id, receiver_id=receiver_id)
+        return jsonify(message= "friendRequest sent"), 200
+
+    except:
+        return jsonify(message = "error sending request"), 400
+
+def add_friend(friend_id):
+    id = get_jwt_identity()
+    return my_database.create_friendship(id, friend_id)
+@app.route("/acceptRequest", methods = ["POST"])
+@jwt_required()
+def accept_request():
+    try:
+        data = request.args.get("requestId")
+        sender_id = my_database.get_request_sender_id(data)
+        if add_friend(friend_id=sender_id):
+            return jsonify(message = "friendship set!"), 200
+        raise ValueError("no sender id or no requestId")
+    except:
+        return jsonify(message ="error setting friendship, check argument or if a request has been made")
+
 
 
 @app.route("/find", methods=["GET"])

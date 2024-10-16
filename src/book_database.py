@@ -160,6 +160,16 @@ class DatabaseConnection:
         if user:
             return user[0]
         return None
+    def create_request (self, sender_id, receiver_id):
+        sql_query = "INSERT INTO friendRequest(sender_id, receiver_id) VALUES(%s, %s)"
+        self.execute_commit(sql_query, (sender_id, receiver_id))
+
+    def get_request_sender_id(self, request_id):
+        sql_query = "SELECT sender_id from friendRequest WHERE request_id = %s"
+        id = self.execute_query(sql_query, (request_id,))
+        return id
+
+
 
     def create_friendship(self, user_id, new_friend_id):
         # Check if the user is already in the friendship list and avoid adding duplicates or adding oneself
