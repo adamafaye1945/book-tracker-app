@@ -164,9 +164,19 @@ def send_request():
     except:
         return jsonify(message = "error sending request"), 400
 
+@app.route("/retrieveRequest", methods =["GET"])
+@jwt_required()
+def retrieve():
+    id = get_jwt_identity()
+    data = my_database.get_all_request_sent_to_user(user_id=id)
+    return jsonify(data),200
+
+
 def add_friend(friend_id):
     id = get_jwt_identity()
     return my_database.create_friendship(id, friend_id)
+
+
 @app.route("/acceptRequest", methods = ["POST"])
 @jwt_required()
 def accept_request():

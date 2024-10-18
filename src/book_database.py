@@ -143,6 +143,7 @@ class DatabaseConnection:
                 res.append({"userid": userid, "name": name})
             return res
         return []
+
     def retrieve_user(self, email=None, name=None, user_id=None):
         if name:
             sql_query = "SELECT userId, name FROM userLogin WHERE name LIKE %s"
@@ -160,7 +161,8 @@ class DatabaseConnection:
         if user:
             return user[0]
         return None
-    def create_request (self, sender_id, receiver_id):
+
+    def create_request(self, sender_id, receiver_id):
         sql_query = "INSERT INTO friendRequest(sender_id, receiver_id) VALUES(%s, %s)"
         self.execute_commit(sql_query, (sender_id, receiver_id))
 
@@ -169,7 +171,23 @@ class DatabaseConnection:
         id = self.execute_query(sql_query, (request_id,))
         return id
 
+    def get_all_request_sent_to_user(self, user_id):
+        json_data = []
+        request_query = "SELECT request_id, sender_id FROM friendRequest WHERE receiver_id = %s"
+        info_query = "SELECT name FROM userLogin WHERE userid = %s"
+        try:
+            data = self.execute_query(request_query, (user_id,))
+            for request_id, sender_id in data:
+                name = self.execute_query(info_query, (sender_id,))
+                json_data.append({
+                    "request_id":request_id,
+                    "name": name[0][0],
+                    "sender_id": sender_id
+                })
 
+        except:
+            return []
+        return json_data
 
     def create_friendship(self, user_id, new_friend_id):
         # Check if the user is already in the friendship list and avoid adding duplicates or adding oneself
@@ -177,7 +195,7 @@ class DatabaseConnection:
             return False
 
         # check if we have a node already if so we add the new freind if not we create a node and add friend
-        query= "SELECT friend1 FROM friendship WHERE friend1 = %s"
+        query = "SELECT friend1 FROM friendship WHERE friend1 = %s"
         id_exist = self.execute_query(query, (user_id,))
 
         if id_exist:
